@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RJ URL Generator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 26px;
+        }
+
+        .description {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #666;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #777;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 14px;
+            border: none;
+            border-radius: 7px;
+            background: #222;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .result-label {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .url-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .url-box input {
+            flex: 1;
+            background: #f8f8f8;
+        }
+
+        .copy-button {
+            width: auto;
+            margin-top: 0;
+            padding: 0 18px;
+        }
+
+        .error {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 7px;
+            background: #ffecec;
+            color: #c00;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .box {
+                padding: 20px;
+            }
+
+            .url-box {
+                flex-direction: column;
+            }
+
+            .copy-button {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="box">
+
+        <h1>RJ URL Generator</h1>
+
+        <p class="description">
+            Convert a Radio Javan page URL into its direct media URL.
+        </p>
+
+        <input
+            type="text"
+            id="inputUrl"
+            placeholder="https://play.radiojavan.com/song/..."
+        >
+
+        <button onclick="generateUrl()">
+            Generate URL
+        </button>
+
+        <div class="error" id="error">
+            Invalid or unsupported Radio Javan URL.
+        </div>
+
+        <div class="result" id="result">
+
+            <div class="result-label">
+                Direct URL
+            </div>
+
+            <div class="url-box">
+                <input
+                    type="text"
+                    id="outputUrl"
+                    readonly
+                >
+
+                <button
+                    class="copy-button"
+                    onclick="copyUrl()"
+                >
+                    Copy
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function generateUrl() {
+
+    const input = document.getElementById("inputUrl").value.trim();
+
+    const result = document.getElementById("result");
+    const error = document.getElementById("error");
+    const output = document.getElementById("outputUrl");
+
+    result.style.display = "none";
+    error.style.display = "none";
+
+    if (!input) {
+        error.textContent = "Please enter a Radio Javan URL.";
+        error.style.display = "block";
+        return;
+    }
+
+    let url;
+
+    try {
+        url = new URL(input);
+    } catch {
+        error.textContent = "Invalid URL.";
+        error.style.display = "block";
+        return;
+    }
+
+    const path = url.pathname.replace(/\/+$/, "");
+
+    let match;
+    let finalUrl;
+
+    match = path.match(/^\/song\/([^/]+)$/);
+
+    if (match) {
+
+        const slug = match[1];
+
+        finalUrl =
+            "https://host2.rj-mw1.com/media/mp3/mp3-320/" +
+            slug +
+            ".mp3";
+
+    } else {
+
+        match = path.match(/^\/podcast\/([^/]+)$/);
+
+        if (match) {
+
+            const slug = match[1];
+
+            finalUrl =
+                "https://host2.rj-mw1.com/media/podcast/mp3-320/" +
+                slug +
+                ".mp3";
+
+        } else {
+
+            match = path.match(/^\/video\/([^/]+)$/);
+
+            if (match) {
+
+                const slug = match[1];
+
+                finalUrl =
+                    "https://host2.rj-mw1.com/media/music_video/hd/" +
+                    slug +
+                    ".mp4";
+
+            } else {
+
+                error.textContent =
+                    "Unsupported URL. Use a Radio Javan song, podcast, or video URL.";
+
+                error.style.display = "block";
+                return;
+            }
+        }
+    }
+
+    output.value = finalUrl;
+    result.style.display = "block";
+}
+
+function copyUrl() {
+
+    const output = document.getElementById("outputUrl");
+
+    navigator.clipboard.writeText(output.value);
+
+    const button = document.querySelector(".copy-button");
+
+    button.textContent = "Copied!";
+
+    setTimeout(() => {
+        button.textContent = "Copy";
+    }, 1500);
+}
+
+document.getElementById("inputUrl").addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+        generateUrl();
+    }
+
+});
+</script>
+
+</body>
+</html>
